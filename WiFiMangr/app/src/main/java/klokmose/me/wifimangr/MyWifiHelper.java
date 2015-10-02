@@ -63,7 +63,7 @@ public class MyWifiHelper {
     }
 
     public Set addSSIDtoSet(String ssid, String setString) {
-        if (ssid != null) {
+        if (ssid != null && setString != null) {
             if (editor == null) {
                 editor = sharedPreferences.edit();
             }
@@ -84,16 +84,19 @@ public class MyWifiHelper {
         }
     }
 
-    public void removeSSIDfromSet(String str, String setString) {
-        if(str != null || setString != null) {
+    public Set removeSSIDfromSet(String ssid, String setString) {
+        if(ssid != null && setString != null) {
             if (editor == null) {
                 editor = sharedPreferences.edit();
             }
             Set s = getSSIDset(setString);
-            s.remove(str);
+            s.remove(ssid);
             editor.putStringSet(setString, s);
             editor.commit();
-        }
+            Log.i("WifiHelper", "Removed ssid: " + ssid);
+            return s;
+        }else
+            return new HashSet(0);
     }
 
     public String[] getResultFromScan() {

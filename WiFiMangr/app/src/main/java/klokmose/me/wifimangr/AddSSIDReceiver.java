@@ -18,8 +18,6 @@ public class AddSSIDReceiver extends BroadcastReceiver {
         NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         notificationManager.cancel(nId);
 
-        
-
         String ssid = null;
         try {
             ssid = intent.getExtras().getString("SSID");

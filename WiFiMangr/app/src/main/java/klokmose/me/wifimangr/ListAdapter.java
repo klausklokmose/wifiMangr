@@ -7,6 +7,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.CheckBox;
+import android.widget.CompoundButton;
 
 import java.util.Iterator;
 import java.util.Set;
@@ -16,19 +17,19 @@ import java.util.Set;
  */
 public class ListAdapter extends BaseAdapter {
     public static final String settingsString = "SSIDS";
-    private final WifiManager wifi;
+    private WifiManager wifi;
+    private View.OnClickListener onClickListener;
     //private final MyWifiHelper wifiHelper;
     private Set<String> checkedItems;
     private String[] list;
-    private final LayoutInflater layoutInflator;
+    private LayoutInflater layoutInflator;
 
-    public ListAdapter(Context context, String[] list, Set checkedItems) {
-        if(list==null || checkedItems == null){
+    public ListAdapter(Context context, String[] list, Set checkedItems,
+                       View.OnClickListener onClickListener) {
+        if (list == null || checkedItems == null) {
             throw new RuntimeException("something went wrong.");
         }
-
-        //wifiHelper = new MyWifiHelper(context);
-
+        this.onClickListener = onClickListener;
         this.list = list;
         this.checkedItems = checkedItems;
 
@@ -36,11 +37,12 @@ public class ListAdapter extends BaseAdapter {
         wifi = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
 
 
-        update();
+        update(list, checkedItems);
     }
 
-    public void update(){
-        //this.list = wifiHelper.getResultFromScan();
+    public void update(String[] list, Set checkedItems) {
+        this.list = list;
+        this.checkedItems = checkedItems;
         notifyDataSetInvalidated();
     }
 
@@ -61,37 +63,33 @@ public class ListAdapter extends BaseAdapter {
 
     @Override
     public View getView(final int position, View convertView, ViewGroup parent) {
+       final ViewHolder holder = new ViewHolder();
 
         convertView = layoutInflator.inflate(R.layout.list_item, null);
-        CheckBox checkBox = (CheckBox) convertView.findViewById(R.id.checkBox);
-        checkBox.setText(list[position]);
+        holder.checkBox = (CheckBox) convertView.findViewById(R.id.checkBox);
+        convertView.setTag(holder);
 
-        if (setContainsString(checkedItems, list[position])){
-            checkBox.setChecked(true);
+        holder.checkBox.setText(list[position]);
+        if (setContainsString(checkedItems, list[position])) {
+            holder.checkBox.setChecked(true);
         }
+        final View finalConvertView = convertView;
+        holder.checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                onClickListener.onClick(finalConvertView);
+                notifyDataSetChanged();
+            }
+        });
 
-       // checkBox.setOnCheckedChangeListener(new CompoundButton
-       //       .OnCheckedChangeListener() {
-       //     @Override
-       //     public void onCheckedChanged(CompoundButton buttonView, boolean
-       //           isChecked) {
-       //         if (isChecked) {
-       //             wifiHelper.addSSIDtoSet(list[position],
-       //                     MyWifiHelper.SAVED_SSID_SET);
-       //         } else {
-       //             wifiHelper.removeSSIDfromSet(list[position],
-       //                     MyWifiHelper.SAVED_SSID_SET);
-       //         }
-       //     }
-       // });
         return convertView;
     }
 
-    private boolean setContainsString(Set<String> set, String str){
+    private boolean setContainsString(Set<String> set, String str) {
         Iterator iterator = set.iterator();
-        while (iterator.hasNext()){
+        while (iterator.hasNext()) {
             String s = (String) iterator.next();
-            if(s.equals(str)){
+            if (s.equals(str)) {
                 return true;
             }
         }

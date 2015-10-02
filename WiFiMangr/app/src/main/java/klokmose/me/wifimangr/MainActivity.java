@@ -1,13 +1,12 @@
 package klokmose.me.wifimangr;
 
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.AdapterView;
 import android.widget.Button;
-import android.widget.CheckBox;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -25,8 +24,9 @@ public class MainActivity extends AppCompatActivity {
     //xml widgets
     private ListView list;
     private Button updateButton;
-    private String[] scanResults;
-    private Set storedSSIDs;
+    private String[] scanResults = new String[0];
+    private Set storedSSIDs = new HashSet(0);
+    private ListAdapter listAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,29 +36,14 @@ public class MainActivity extends AppCompatActivity {
 
         tmp_savedSet = new HashSet<>();
 
-        scanResults = wifiHelper.getResultFromScan();
-        storedSSIDs = wifiHelper.getSSIDset(MyWifiHelper.SAVED_SSID_SET);
-        list = (ListView)findViewById(R.id.listView);
-        final ListAdapter adapter = new ListAdapter(this, scanResults, storedSSIDs);
-        list.setAdapter(adapter);
-
-        list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                CheckBox checkBox = (CheckBox)view.findViewById(R.id.checkBox);
-                if (checkBox.isChecked()) {
-                    wifiHelper.addSSIDtoSet(scanResults[position], MyWifiHelper.SAVED_SSID_SET);
-                } else {
-                    wifiHelper.removeSSIDfromSet(scanResults[position], MyWifiHelper.SAVED_SSID_SET);
-                }
-            }
-        });
+        setupListView();
 
         updateButton = (Button)findViewById(R.id.updateButton);
         updateButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                adapter.update();
+                getLatestResources();
+                listAdapter.update(scanResults, storedSSIDs);
                 setTextViewWithSavedSSIDs();
             }
         });
@@ -73,7 +58,6 @@ public class MainActivity extends AppCompatActivity {
         });
 
         boolean ok = getSavedSSIDsFromPrefs();
-        setTextViewWithSavedSSIDs();
         if(ok) {
             //if current list contains an SSID from saved tmp_savedSet, then turn on WiFi
             if (listContainsOneOfSetItems(wifiHelper.getLatestScanResult(), tmp_savedSet)) {
@@ -84,7 +68,35 @@ public class MainActivity extends AppCompatActivity {
                 wifiHelper.disableWifi();
             }
         }
+    }
 
+    private void setupListView() {
+        //views
+        list = (ListView)findViewById(R.id.listView);
+        list.setItemsCanFocus(true);
+        //onclick
+        View.OnClickListener clickListener = new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                ViewHolder holder = (ViewHolder)v.getTag();
+                holder.isChecked = !holder.isChecked; //switch
+
+                String text = (String) holder.checkBox.getText();
+                Log.i("Main", "isChecked: " + holder.isChecked);
+
+                if (holder.checkBox.isChecked()) {
+                    storedSSIDs = wifiHelper.addSSIDtoSet
+                            (text, MyWifiHelper.SAVED_SSID_SET);
+                } else {
+                    storedSSIDs = wifiHelper.removeSSIDfromSet
+                            (text, MyWifiHelper.SAVED_SSID_SET);
+                }
+                getSavedSSIDsFromPrefs();
+                setTextViewWithSavedSSIDs();
+            }
+        };
+        listAdapter = new ListAdapter(this, scanResults, storedSSIDs, clickListener);
+        list.setAdapter(listAdapter);
 
     }
 
@@ -108,6 +120,22 @@ public class MainActivity extends AppCompatActivity {
             }
         }
         return false;
+    }
+
+    @Override
+    protected void onResume() {
+        getLatestResources();
+
+        listAdapter.update(scanResults, storedSSIDs);
+
+        setTextViewWithSavedSSIDs();
+
+        super.onResume();
+    }
+
+    private void getLatestResources() {
+        scanResults = wifiHelper.getResultFromScan();
+        storedSSIDs = wifiHelper.getSSIDset(MyWifiHelper.SAVED_SSID_SET);
     }
 
     @Override
