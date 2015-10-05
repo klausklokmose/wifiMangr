@@ -29,15 +29,15 @@ public class AddSSIDReceiver extends BroadcastReceiver {
             }
         } catch (Exception e) {
         }
-        MyWifiHelper helper = new MyWifiHelper(context);
+        WifiHelper helper = new WifiHelper(context);
 
         switch (action){
             case "Add":
-                helper.addSSIDtoSet(ssid, MyWifiHelper.SAVED_SSID_SET);
+                helper.addSSIDtoSet(ssid, WifiHelper.SAVED_SSID_SET);
                 Toast.makeText(context, "Will use SSID: " + ssid + " in the future", Toast.LENGTH_SHORT).show();
                 break;
             case "Ignore":
-                helper.addSSIDtoSet(ssid, MyWifiHelper.SAVED_SSID_SET_IGNORE);
+                helper.addSSIDtoSet(ssid, WifiHelper.SAVED_SSID_SET_IGNORE);
                 Toast.makeText(context, "Will ignore SSID: " + ssid + " in the future", Toast.LENGTH_SHORT).show();
                 break;
             default:

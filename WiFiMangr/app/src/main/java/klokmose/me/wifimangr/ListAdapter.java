@@ -19,7 +19,7 @@ public class ListAdapter extends BaseAdapter {
     public static final String settingsString = "SSIDS";
     private WifiManager wifi;
     private View.OnClickListener onClickListener;
-    //private final MyWifiHelper wifiHelper;
+    //private final WifiHelper wifiHelper;
     private Set<String> checkedItems;
     private String[] list;
     private LayoutInflater layoutInflator;

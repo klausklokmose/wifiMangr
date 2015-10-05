@@ -12,19 +12,18 @@ import android.net.wifi.WifiManager;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
-import java.util.Iterator;
-import java.util.Set;
+import java.util.List;
 
 /**
  * Created by KlausKlokmose on 22/09/15.
  */
 public class MyBroadcastReceiver extends BroadcastReceiver {
-    private MyWifiHelper wifiHelper;
+    private WifiHelper wifiHelper;
 
     @Override
     public void onReceive(Context context, Intent intent) {
         //TODO do something
-        wifiHelper = new MyWifiHelper(context);
+        wifiHelper = new WifiHelper(context);
 
         if(intent.getAction().equals(WifiManager.NETWORK_STATE_CHANGED_ACTION)) {
             NetworkInfo networkInfo =
@@ -111,12 +110,13 @@ public class MyBroadcastReceiver extends BroadcastReceiver {
     }
 
     private boolean isSSIDNotKnown(String ssid) {
-        return !setContainsString(wifiHelper.getSSIDset(MyWifiHelper.SAVED_SSID_SET),
-                ssid) && isSSIDNotOnAvoidList(ssid);
+        return !wifiHelper.getSavedSSIDList(WifiHelper
+                        .SAVED_SSID_SET).contains(ssid) &&
+                isSSIDNotOnAvoidList(ssid);
     }
 
     private boolean shouldTurnOnWifi() {
-        Set set = wifiHelper.getSSIDset(MyWifiHelper.SAVED_SSID_SET);
+        List set = wifiHelper.getSavedSSIDList(WifiHelper.SAVED_SSID_SET);
         for (String str : wifiHelper.getResultFromScan()){
             if(set.contains(str)){
                 return true;
@@ -164,17 +164,5 @@ public class MyBroadcastReceiver extends BroadcastReceiver {
             NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
             notificationManager.notify(notificationID, notification);
         }
-    }
-
-    private boolean setContainsString(Set<String> set, String str){
-        Iterator iterator = set.iterator();
-        while (iterator.hasNext()){
-            String s = (String) iterator.next();
-            //Log.d("COMPARE", s + " AND " + str);
-            if(s.equals(str)){
-                return true;
-            }
-        }
-        return false;
     }
 }

@@ -20,17 +20,21 @@
             </intent-filter>
         </activity>
 
-        <receiver android:name=".MyBroadcastReceiver">
+        <receiver android:name=".MyBroadcastReceiver" >
             <intent-filter>
-               <!-- <action android:name="android.net.wifi.WIFI_STATE_CHANGED"/> -->
-                <action android:name="android.net.wifi.STATE_CHANGE"/>
+
+                <!-- <action android:name="android.net.wifi.WIFI_STATE_CHANGED"/> -->
+                <action android:name="android.net.wifi.STATE_CHANGE" />
             </intent-filter>
         </receiver>
-
-        <receiver android:name=".AddSSIDReceiver">
+        <receiver android:name=".AddSSIDReceiver" >
         </receiver>
 
-
+        <activity
+            android:name=".StoredSSIDActivity"
+            android:label="@string/title_activity_stored_ssid"
+            android:theme="@style/AppTheme.NoActionBar" >
+        </activity>
     </application>
 
 </manifest>
