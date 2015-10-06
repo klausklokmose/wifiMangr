@@ -6,8 +6,11 @@ import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
+import android.media.RingtoneManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.net.Uri;
 import android.net.wifi.WifiManager;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
@@ -129,36 +132,49 @@ public class MyBroadcastReceiver extends BroadcastReceiver {
         return ssid.hashCode();
     }
 
+    public static final String ADD = "ADD";
+    public static final String IGNORE = "IGNORE";
 
     private void buildNotifictation(Context context, String message, String SSID){
         int notificationID = nextID(SSID);
 
         if(SSID != null) {
-            Intent resultIntent = new Intent(context, AddSSIDReceiver.class)
+            Intent addIntent = new Intent(context, AddSSIDReceiver.class)
                 .putExtra("SSID", SSID)
                 .putExtra("nID", notificationID)
-                    .setAction(SSID)
+                    .setAction(ADD)
                     .setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
 
-            PendingIntent resultPendingIntent = PendingIntent.getBroadcast(
-                    context, notificationID, resultIntent,
+            PendingIntent pendingIntentADD = PendingIntent.getBroadcast(
+                    context, notificationID, addIntent,
                     PendingIntent.FLAG_CANCEL_CURRENT);
 
-            //Intent fakeIntent = new Intent(context, AddSSIDReceiver.class);
-            //fakeIntent.putExtra("nID", notificationID);
+            Intent ignoreIntent = new Intent(context, AddSSIDReceiver.class)
+                    .putExtra("SSID", SSID)
+                    .putExtra("nID", notificationID)
+                    .setAction(IGNORE)
+                    .setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            PendingIntent pendingIntentIgnore = PendingIntent.getBroadcast
+                    (context, notificationID, ignoreIntent, PendingIntent
+                            .FLAG_CANCEL_CURRENT);
 
-            //PendingIntent fakePendingIntent = PendingIntent.getBroadcast(
-            //        context, notificationID, fakeIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+            Uri alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+            long[] vibrate = { 0, 100, 200, 300 };
 
             NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context);
             Notification notification = mBuilder.setSmallIcon(R.drawable.notification_template_icon_bg)
                     .setTicker("MY APP").setWhen(0)
                     .setContentTitle("My app")
+                    .setSound(alarmSound)
+                    .setLights(Color.BLACK, 500, 500)
+                    .setVibrate(vibrate)
                     //.setAutoCancel(true)
                     .setStyle(new NotificationCompat.BigTextStyle().bigText(message))
                     .setContentText(message)
-                    .addAction(R.drawable.abc_tab_indicator_mtrl_alpha, "Add", resultPendingIntent)
-                    .addAction(R.drawable.abc_tab_indicator_material, "Ignore", resultPendingIntent).build();
+                    .addAction(R.drawable.abc_tab_indicator_mtrl_alpha, ADD,
+                            pendingIntentADD)
+                    .addAction(R.drawable.abc_tab_indicator_material, IGNORE,
+                            pendingIntentIgnore).build();
 
             notification.flags |= Notification.FLAG_NO_CLEAR;
             NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);

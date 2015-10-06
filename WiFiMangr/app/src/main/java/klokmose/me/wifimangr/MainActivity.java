@@ -97,7 +97,7 @@ public class MainActivity extends AppCompatActivity {
                 flipCheckBox(checkedTextView);
             }
         });
-        setCheckedItemsInListView(adapter, storedSSIDs, list);
+
     }
 
     private static void setCheckedItemsInListView(ArrayAdapter<String> adapter, List<String> storedSSIDs, ListView listView) {
@@ -105,6 +105,8 @@ public class MainActivity extends AppCompatActivity {
             if(storedSSIDs.contains(adapter.getItem(i))){
                 Log.d("CHECK", "SET CHECKED: " + adapter.getItem(i));
                 listView.setItemChecked(i, true);
+            }else{
+                listView.setItemChecked(i, false);
             }
         }
     }
@@ -122,24 +124,16 @@ public class MainActivity extends AppCompatActivity {
 
     private boolean getSavedSSIDsFromPrefs() {
         storedSSIDs.clear();
-        storedSSIDs.addAll(wifiHelper.getSavedSSIDList(WifiHelper.SAVED_SSID_SET));
+        storedSSIDs = wifiHelper.getSavedSSIDList(WifiHelper.SAVED_SSID_SET);
         return true;
-    }
-
-    private boolean listContainsOneOfSetItems(List<String> ss, List<String>
-            savedSet){
-        for (String s: ss) {
-            if(savedSet.contains(s)){
-                return true;
-            }
-        }
-        return false;
     }
 
     @Override
     protected void onResume() {
         getLatestLists();
+        adapter.notifyDataSetChanged();
         setTextViewWithSavedSSIDs();
+        setCheckedItemsInListView(adapter, storedSSIDs, list);
         super.onResume();
     }
 

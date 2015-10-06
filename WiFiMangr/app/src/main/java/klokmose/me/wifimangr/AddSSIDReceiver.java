@@ -14,7 +14,6 @@ public class AddSSIDReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         int nId = intent.getExtras().getInt("nID");
-        String action = intent.getAction();
         NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         notificationManager.cancel(nId);
 
@@ -31,16 +30,18 @@ public class AddSSIDReceiver extends BroadcastReceiver {
         }
         WifiHelper helper = new WifiHelper(context);
 
-        switch (action){
-            case "Add":
+        switch (intent.getAction()){
+            case MyBroadcastReceiver.ADD:
                 helper.addSSIDtoSet(ssid, WifiHelper.SAVED_SSID_SET);
                 Toast.makeText(context, "Will use SSID: " + ssid + " in the future", Toast.LENGTH_SHORT).show();
                 break;
-            case "Ignore":
+            case MyBroadcastReceiver.IGNORE:
                 helper.addSSIDtoSet(ssid, WifiHelper.SAVED_SSID_SET_IGNORE);
                 Toast.makeText(context, "Will ignore SSID: " + ssid + " in the future", Toast.LENGTH_SHORT).show();
                 break;
             default:
+                Log.e("AddSSIDReceiver", "default case. Nothing was added to " +
+                        "anything. action was: \""+intent.getAction()+"\"");
                 break;
         }
     }

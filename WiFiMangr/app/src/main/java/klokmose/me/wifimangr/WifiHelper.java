@@ -110,6 +110,7 @@ public class WifiHelper {
                 return new ArrayList<>();
             }
         } else{
+            Log.e("WifiHelper", "SSID was "+ssid+ " and setString was "+setString);
             return new ArrayList<>();
         }
     }
