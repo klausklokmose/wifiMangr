@@ -3,7 +3,6 @@ package klokmose.me.wifimangr;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.net.wifi.ScanResult;
-import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.util.Log;
 import android.widget.Toast;
@@ -24,20 +23,16 @@ public class WifiHelper {
 
     //fields
     private final WifiManager wifiManager;
-    private SharedPreferences sharedPreferences;
+    private final SharedPreferences sharedPreferences;
     private SharedPreferences.Editor editor;
-    private List<String> latestScanResult;
-    private List<ScanResult> search;
-
 
     public WifiHelper(Context context) {
         sharedPreferences = context.getSharedPreferences("wifimangr", 0);
+        editor = sharedPreferences.edit();
         wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
-        latestScanResult = new ArrayList<>();
     }
 
     public boolean removeAllSavedSSIDs(Context context) {
-        editor = sharedPreferences.edit();
         Set<String> emptySet = new HashSet<>();
         editor.putStringSet(ListAdapter.settingsString, emptySet);
         Toast.makeText(context, "Removed all saved SSIDs", Toast
@@ -53,13 +48,6 @@ public class WifiHelper {
         }
         List list = new ArrayList();
         list.addAll(tempSet);
-        //return savedSet;
-        return list;
-    }
-
-    public List getSSIDList(String setString){
-        List list = new ArrayList();
-        list.addAll(getSavedSSIDList(setString));
         return list;
     }
 
@@ -75,9 +63,6 @@ public class WifiHelper {
 
     public List<String> addSSIDtoSet(String ssid, String setString) {
         if (ssid != null && setString != null) {
-            if (editor == null) {
-                editor = sharedPreferences.edit();
-            }
             List s = getSavedSSIDList(setString);
             s.add(ssid);
             editor.putStringSet(setString, new HashSet<>(s));
@@ -94,14 +79,14 @@ public class WifiHelper {
         }
     }
 
-    public List<String> removeSSIDfromSet(String ssid, String setString) {
-        if(ssid != null && setString != null) {
+    public List<String> removeSSIDfromSet(String ssid, String set) {
+        if(ssid != null && set != null) {
             if (editor == null) {
                 editor = sharedPreferences.edit();
             }
-            List s = getSavedSSIDList(setString);
+            List s = getSavedSSIDList(set);
             s.remove(ssid);
-            editor.putStringSet(setString, new HashSet<>(s));
+            editor.putStringSet(set, new HashSet<>(s));
             if(editor.commit()){
                 Log.i("WifiHelper", "Removed ssid: " + ssid);
                 return s;
@@ -110,38 +95,25 @@ public class WifiHelper {
                 return new ArrayList<>();
             }
         } else{
-            Log.e("WifiHelper", "SSID was "+ssid+ " and setString was "+setString);
+            Log.e("WifiHelper", "SSID was "+ssid+ " and setString was "+set);
             return new ArrayList<>();
         }
     }
 
     public List<String> getResultFromScan() {
-        if (wifiManager != null) {
-            search = wifiManager.getScanResults();
-
-            latestScanResult.clear();
-            for (ScanResult sr: search) {
-                if(!latestScanResult.contains(sr.SSID)){
-                    latestScanResult.add(sr.SSID);
-                }
-            }
-            return latestScanResult;
-        } else {
-            return latestScanResult;
-        }
+        List<String> scanResult = new ArrayList<>();
+        List<ScanResult> search = wifiManager.getScanResults();
+        for (ScanResult sr: search)
+            if (!scanResult.contains(sr.SSID))
+                scanResult.add(sr.SSID);
+        return scanResult;
     }
 
-    public List<String> getLatestScanResult() {
-        return latestScanResult;
+    public String getConnectedSSID() {
+        return wifiManager.getConnectionInfo().getSSID();
     }
 
-    public String getConnectedSSID(Context context) {
-        WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
-        WifiInfo info = wifiManager.getConnectionInfo();
-        return info.getSSID();
-    }
-
-    public String getLatetsConnectedSSID() {
+    public String getLatestConnectedSSID() {
         return sharedPreferences.getString(CONNECTED_SSID, null);
     }
 

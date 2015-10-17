@@ -42,9 +42,9 @@ public class MyBroadcastReceiver extends BroadcastReceiver {
             if(networkInfo.isConnected()) {
                 // Wifi is connected
                 Log.d("Inetify", "Wifi is connected: " + String.valueOf(networkInfo));
-                String latetsConnectedSSID = wifiHelper.getLatetsConnectedSSID();
+                String latetsConnectedSSID = wifiHelper.getLatestConnectedSSID();
 
-                String connectedSSID = wifiHelper.getConnectedSSID(context).replaceAll("\"", "");
+                String connectedSSID = wifiHelper.getConnectedSSID().replaceAll("\"", "");
                 if(connectedSSID == null){
                     Log.d("BroadcastReceiver", "found null SSID");
                 }//am I already connected to this one?
@@ -58,6 +58,9 @@ public class MyBroadcastReceiver extends BroadcastReceiver {
 
                         //TODO built it and handle it
                         buildNotifictation(context, message, connectedSSID);
+                    }else{
+                        Log.i("BroadcastReceiver", "Decided not to push a " +
+                                "notification for ssid: "+connectedSSID);
                     }
 
                 }

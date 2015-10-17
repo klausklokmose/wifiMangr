@@ -1,146 +1,93 @@
 package klokmose.me.wifimangr;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
+import android.support.design.widget.TabLayout;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
+import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.Button;
-import android.widget.CheckedTextView;
-import android.widget.ListView;
-import android.widget.TextView;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements
+        OneFragment.OnFragmentInteractionListener {
 
-    //resources
-    private WifiHelper wifiHelper;
-
-    //xml widgets
-    private ListView list;
-    private Button updateButton;
-    private Button clearButton;
-
-    //lists
-    private List<String> storedSSIDs = new ArrayList<>();
-    private List<String> scanResults;
-    private ArrayAdapter<String> adapter;
+    //new fields
+    private Toolbar toolbar;
+    private TabLayout tabLayout;
+    private ViewPager viewPager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        wifiHelper = new WifiHelper(this);
 
-        storedSSIDs = wifiHelper.getSavedSSIDList(WifiHelper.SAVED_SSID_SET);
-        setupListView();
+        //TODO NEW
+        toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
 
-        setupButtons();
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        boolean ok = getSavedSSIDsFromPrefs();
+        viewPager = (ViewPager) findViewById(R.id.viewpager);
+        setupViewPager(viewPager);
 
-    }
+        tabLayout = (TabLayout) findViewById(R.id.tabs);
+        tabLayout.setupWithViewPager(viewPager);
 
-    private void setupButtons() {
-        updateButton = (Button)findViewById(R.id.updateButton);
-        updateButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                getLatestLists();
-                //listAdapter.update(scanResults, storedSSIDs);
-                setTextViewWithSavedSSIDs();
-            }
-        });
-
-        clearButton = (Button)findViewById(R.id.button);
-        clearButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                wifiHelper.removeAllSavedSSIDs(getBaseContext());
-                setTextViewWithSavedSSIDs();
-            }
-        });
-    }
-
-    private void setupListView() {
-        scanResults = wifiHelper.getResultFromScan();
-        getSavedSSIDsFromPrefs();
-
-        adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_multiple_choice, scanResults);
-        list = (ListView)findViewById(R.id.listView);
-        list.setAdapter(adapter);
-        list.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
-        list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Log.d("CLICK", "User clicked on list item at position: " + position);
-
-                CheckedTextView checkedTextView = ((CheckedTextView) view);
-                String text = checkedTextView.getText().toString();
-                if (checkedTextView.isChecked()) {
-                    //ADD
-                    scanResults = wifiHelper.addSSIDtoSet
-                            (text, WifiHelper.SAVED_SSID_SET);
-                } else {
-                    //REMOVE
-                    scanResults = wifiHelper.removeSSIDfromSet
-                            (text, WifiHelper.SAVED_SSID_SET);
-                }
-                setTextViewWithSavedSSIDs();
-                flipCheckBox(checkedTextView);
-            }
-        });
 
     }
 
-    private static void setCheckedItemsInListView(ArrayAdapter<String> adapter, List<String> storedSSIDs, ListView listView) {
-        for (int i = 0; i  < adapter.getCount(); i++) {
-            if(storedSSIDs.contains(adapter.getItem(i))){
-                Log.d("CHECK", "SET CHECKED: " + adapter.getItem(i));
-                listView.setItemChecked(i, true);
-            }else{
-                listView.setItemChecked(i, false);
-            }
-        }
-    }
-
-    private void flipCheckBox(CheckedTextView checkedTextView) {
-        checkedTextView.setChecked(!checkedTextView.isChecked());
-    }
-
-    private void setTextViewWithSavedSSIDs() {
-        storedSSIDs = wifiHelper.getSavedSSIDList(WifiHelper.SAVED_SSID_SET);
-        String s = Arrays.deepToString(storedSSIDs.toArray());
-        TextView textView = (TextView)findViewById(R.id.text);
-        textView.setText("Saved SSIDS\n" + s);
-    }
-
-    private boolean getSavedSSIDsFromPrefs() {
-        storedSSIDs.clear();
-        storedSSIDs = wifiHelper.getSavedSSIDList(WifiHelper.SAVED_SSID_SET);
-        return true;
+    private void setupViewPager(ViewPager viewPager) {
+        ViewPagerAdapter adapter = new ViewPagerAdapter(getSupportFragmentManager());
+        adapter.addFragment(new OneFragment(), "ONE");
+        adapter.addFragment(new OneFragment(), "TWO");
+        adapter.addFragment(new OneFragment(), "THREE");
+        viewPager.setAdapter(adapter);
     }
 
     @Override
-    protected void onResume() {
-        getLatestLists();
-        adapter.notifyDataSetChanged();
-        setTextViewWithSavedSSIDs();
-        setCheckedItemsInListView(adapter, storedSSIDs, list);
-        super.onResume();
+    public void onFragmentInteraction(Uri uri) {
+
     }
 
-    private void getLatestLists() {
-        scanResults = wifiHelper.getResultFromScan();
-        getSavedSSIDsFromPrefs();
+    class ViewPagerAdapter extends FragmentPagerAdapter {
+        private final List<Fragment> mFragmentList = new ArrayList<>();
+        private final List<String> mFragmentTitleList = new ArrayList<>();
+
+        public ViewPagerAdapter(FragmentManager manager) {
+            super(manager);
+        }
+
+        @Override
+        public Fragment getItem(int position) {
+            return mFragmentList.get(position);
+        }
+
+        @Override
+        public int getCount() {
+            return mFragmentList.size();
+        }
+
+        public void addFragment(Fragment fragment, String title) {
+            mFragmentList.add(fragment);
+            mFragmentTitleList.add(title);
+        }
+
+        @Override
+        public CharSequence getPageTitle(int position) {
+            return mFragmentTitleList.get(position);
+        }
     }
+
+
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
