@@ -105,14 +105,10 @@ public class MyBroadcastReceiver extends BroadcastReceiver {
 
     private boolean isSSIDNotOnAvoidList(String connectedSSID) {
         //TODO get avoid list from shared prefs
-        String[] avoid = new String[]{"<unknown ssid>"};
-
-        for (int i = 0; i < avoid.length; i++) {
-            if(connectedSSID.equals(avoid[i])){
-               return false;
-            }
-        }
-        return true;
+        List<String> list = wifiHelper.getSavedSSIDList(WifiHelper
+                .SAVED_SSID_SET_IGNORE);
+        list.add("<unknown ssid>");
+        return !list.contains(connectedSSID);
     }
 
     private boolean isSSIDNotKnown(String ssid) {

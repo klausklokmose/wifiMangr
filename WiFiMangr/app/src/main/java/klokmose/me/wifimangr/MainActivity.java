@@ -1,7 +1,5 @@
 package klokmose.me.wifimangr;
 
-import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
@@ -16,24 +14,28 @@ import android.view.MenuItem;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity implements
-        OneFragment.OnFragmentInteractionListener {
+public class MainActivity extends AppCompatActivity implements OnFragmentInteractionListener{
 
     //new fields
     private Toolbar toolbar;
     private TabLayout tabLayout;
     private ViewPager viewPager;
 
+    private WifiHelper wifiHelper;
+    private ViewPagerAdapter adapter;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        wifiHelper = new WifiHelper(this);
+
         //TODO NEW
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+//        getSupportActionBar().setDisplayHomeAsUpEnabled(false);
 
         viewPager = (ViewPager) findViewById(R.id.viewpager);
         setupViewPager(viewPager);
@@ -41,20 +43,30 @@ public class MainActivity extends AppCompatActivity implements
         tabLayout = (TabLayout) findViewById(R.id.tabs);
         tabLayout.setupWithViewPager(viewPager);
 
-
     }
 
     private void setupViewPager(ViewPager viewPager) {
-        ViewPagerAdapter adapter = new ViewPagerAdapter(getSupportFragmentManager());
-        adapter.addFragment(new OneFragment(), "ONE");
-        adapter.addFragment(new OneFragment(), "TWO");
-        adapter.addFragment(new OneFragment(), "THREE");
+        adapter = new ViewPagerAdapter(getSupportFragmentManager());
+        adapter.addFragment(new FragmentSearchAndSelect(), "Scan results");
+        adapter.addFragment(new FragmentSavedList(), "Saved hotspots");
+        adapter.addFragment(new FragmentIgnoreList(), "Ignored hotspots");
         viewPager.setAdapter(adapter);
     }
 
+    /**
+     * callback from FragmentSearchAndSelect.java
+     * @param add
+     * @param text
+     */
     @Override
-    public void onFragmentInteraction(Uri uri) {
+    public void addOrRemoveItem(boolean add, String text) {
+        //Log.d("addOrRemoveItem", str);
+        ((FragmentSavedList)adapter.getItem(1)).updateStoredSSIDs(add, text);
+    }
 
+    @Override
+    public void uncheckItem(String text) {
+        ((FragmentSearchAndSelect)adapter.getItem(0)).unCheckItem(text);
     }
 
     class ViewPagerAdapter extends FragmentPagerAdapter {
@@ -86,9 +98,6 @@ public class MainActivity extends AppCompatActivity implements
         }
     }
 
-
-
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -105,8 +114,7 @@ public class MainActivity extends AppCompatActivity implements
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
-            Intent intent = new Intent(this, StoredSSIDActivity.class);
-            startActivity(intent);
+
             return true;
         }
         return super.onOptionsItemSelected(item);

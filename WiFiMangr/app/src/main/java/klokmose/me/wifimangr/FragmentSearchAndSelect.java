@@ -1,7 +1,6 @@
 package klokmose.me.wifimangr;
 
 import android.app.Activity;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.util.Log;
@@ -13,22 +12,12 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckedTextView;
 import android.widget.ListView;
-import android.widget.TextView;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 
-/**
- * A simple {@link Fragment} subclass.
- * Activities that contain this fragment must implement the
- * {@link OneFragment.OnFragmentInteractionListener} interface
- * to handle interaction events.
- * Use the {@link OneFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
-public class OneFragment extends Fragment {
+public class FragmentSearchAndSelect extends Fragment{
 
     //TODO my fields
     //resources
@@ -36,12 +25,11 @@ public class OneFragment extends Fragment {
 
     //xml widgets
     private ListView list;
-    private Button updateButton;
-    private Button clearButton;
 
     //lists
     private List<String> storedSSIDs = new ArrayList<>();
     private List<String> scanResults;
+
     private ArrayAdapter<String> adapter;
 
 
@@ -56,6 +44,8 @@ public class OneFragment extends Fragment {
 
     private OnFragmentInteractionListener mListener;
     private View myFragmentView;
+    private Button updateButton;
+    private Button clearButton;
 
     /**
      * Use this factory method to create a new instance of
@@ -63,11 +53,11 @@ public class OneFragment extends Fragment {
      *
      * @param param1 Parameter 1.
      * @param param2 Parameter 2.
-     * @return A new instance of fragment OneFragment.
+     * @return A new instance of fragment FragmentSearchAndSelect.
      */
     // TODO: Rename and change types and number of parameters
-    public static OneFragment newInstance(String param1, String param2) {
-        OneFragment fragment = new OneFragment();
+    public static FragmentSearchAndSelect newInstance(String param1, String param2) {
+        FragmentSearchAndSelect fragment = new FragmentSearchAndSelect();
         Bundle args = new Bundle();
         args.putString(ARG_PARAM1, param1);
         args.putString(ARG_PARAM2, param2);
@@ -75,7 +65,7 @@ public class OneFragment extends Fragment {
         return fragment;
     }
 
-    public OneFragment() {
+    public FragmentSearchAndSelect() {
         // Required empty public constructor
     }
 
@@ -92,19 +82,17 @@ public class OneFragment extends Fragment {
 
         storedSSIDs = wifiHelper.getSavedSSIDList(WifiHelper.SAVED_SSID_SET);
         scanResults = wifiHelper.getResultFromScan();
-
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        myFragmentView = inflater.inflate(R.layout.fragment_one, container,
-                false);
+        myFragmentView = inflater.inflate(R.layout.fragment_one, container, false);
         setupListView();
         getLatestLists();
         adapter.notifyDataSetChanged();
-        setTextViewWithSavedSSIDs();
+        //setTextViewWithSavedSSIDs();
         setCheckedItemsInListView(adapter, storedSSIDs, list);
         setupButtons();
 
@@ -115,7 +103,7 @@ public class OneFragment extends Fragment {
     public void onResume() {
         getLatestLists();
         adapter.notifyDataSetChanged();
-        setTextViewWithSavedSSIDs();
+        //setTextViewWithSavedSSIDs();
         setCheckedItemsInListView(adapter, storedSSIDs, list);
         super.onResume();
     }
@@ -129,7 +117,6 @@ public class OneFragment extends Fragment {
             throw new ClassCastException(activity.toString()
                     + " must implement OnFragmentInteractionListener");
         }
-
     }
 
     @Override
@@ -138,29 +125,14 @@ public class OneFragment extends Fragment {
         mListener = null;
     }
 
-    /**
-     * This interface must be implemented by activities that contain this
-     * fragment to allow an interaction in this fragment to be communicated
-     * to the activity and potentially other fragments contained in that
-     * activity.
-     * <p/>
-     * See the Android Training lesson <a href=
-     * "http://developer.android.com/training/basics/fragments/communicating.html"
-     * >Communicating with Other Fragments</a> for more information.
-     */
-    public interface OnFragmentInteractionListener {
-        // TODO: Update argument type and name
-        public void onFragmentInteraction(Uri uri);
-    }
-
     private void setupButtons() {
         updateButton = (Button) myFragmentView.findViewById(R.id.updateButton);
         updateButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 getLatestLists();
-                //listAdapter.update(scanResults, storedSSIDs);
-                setTextViewWithSavedSSIDs();
+                Log.d("BUTTON", "UPDATE");
+                adapter.notifyDataSetChanged();
             }
         });
 
@@ -169,7 +141,8 @@ public class OneFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 wifiHelper.removeAllSavedSSIDs(getActivity().getBaseContext());
-                setTextViewWithSavedSSIDs();
+                Log.d("BUTTON", "REMOVE ALL");
+                //setTextViewWithSavedSSIDs();
             }
         });
     }
@@ -190,22 +163,30 @@ public class OneFragment extends Fragment {
                 String text = checkedTextView.getText().toString();
                 if (checkedTextView.isChecked()) {
                     //ADD
-                    scanResults = wifiHelper.addSSIDtoSet
+                    storedSSIDs = wifiHelper.addSSIDtoSet
                             (text, WifiHelper.SAVED_SSID_SET);
+                    StringBuilder sb = new StringBuilder();
+                    for(String s : storedSSIDs){
+                        sb.append(s + ", ");
+                    }
+                    mListener.addOrRemoveItem(true, text);
+                    Log.d("storedSSIDs", sb.toString());
                 } else {
                     //REMOVE
-                    scanResults = wifiHelper.removeSSIDfromSet
+                    storedSSIDs = wifiHelper.removeSSIDfromSet
                             (text, WifiHelper.SAVED_SSID_SET);
+                    mListener.addOrRemoveItem(false, text);
                 }
-                setTextViewWithSavedSSIDs();
-                flipCheckBox(checkedTextView);
+
             }
         });
 
     }
 
     private static void setCheckedItemsInListView(ArrayAdapter<String> adapter, List<String> storedSSIDs, ListView listView) {
+
         for (int i = 0; i  < adapter.getCount(); i++) {
+
             if(storedSSIDs.contains(adapter.getItem(i))){
                 Log.d("CHECK", "SET CHECKED: " + adapter.getItem(i));
                 listView.setItemChecked(i, true);
@@ -215,17 +196,13 @@ public class OneFragment extends Fragment {
         }
     }
 
-    private void flipCheckBox(CheckedTextView checkedTextView) {
-        checkedTextView.setChecked(!checkedTextView.isChecked());
+    public void unCheckItem(String text){
+        for (int i = 0; i < adapter.getCount(); i++) {
+            if(adapter.getItem(i).equals(text)){
+                list.setItemChecked(i, false);
+            }
+        }
     }
-
-    private void setTextViewWithSavedSSIDs() {
-        storedSSIDs = wifiHelper.getSavedSSIDList(WifiHelper.SAVED_SSID_SET);
-        String s = Arrays.deepToString(storedSSIDs.toArray());
-        TextView textView = (TextView)myFragmentView.findViewById(R.id.text);
-        textView.setText("Saved SSIDS\n" + s);
-    }
-
     private void getSavedSSIDsFromPrefs() {
         storedSSIDs.clear();
         storedSSIDs = wifiHelper.getSavedSSIDList(WifiHelper.SAVED_SSID_SET);
